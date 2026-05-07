@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Reya's Barbie World 💖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Barbie World" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#fce7f3" />
+<link rel="apple-touch-icon" href="mia.png" />
+<link rel="icon" href="mia.png" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet" />
+
+<style>
+html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+body { background: #fce7f3; font-family: Fredoka, "Comic Sans MS", system-ui; -webkit-font-smoothing: antialiased; }
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+button { touch-action: manipulation; }
+button:focus { outline: none; }
+img { -webkit-user-drag: none; user-select: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+// Inline icon components — replace lucide-react imports
+function ArrowLeft({ className, style }) {
+  return (
+    <svg className={className} style={style} xmlns="http://www.w3.org/2000/svg"
+      width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+    </svg>
+  );
+}
+function Star({ className, style }) {
+  return (
+    <svg className={className} style={style} xmlns="http://www.w3.org/2000/svg"
+      width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+    </svg>
+  );
+}
+
+/* ====== APP CODE ====== */
+
+/* ============================================================
+   REYA'S BARBIE WORLD v3
+   - 16 hand-drawn Barbies that match the photos
+   - 8 sound style options
+   - Every activity is "pick from options" — no falling chaos
+   ============================================================ */
+
+// ============= BARBIE DATA =============
+// Each entry tuned to match the actual photo
+const BARBIES = [
+  { id:'mia', name:'Mia', trait:"Reya's bestie! Age 4",
+    skin:'#fcdcc0', hair:'#f4cf4c', hairStyle:'pigtailBuns', eye:'#5dade2',
+    dress:'#9b59b6', pattern:'wrapGold', accessory:'',
+    bg:'from-amber-200 via-yellow-300 to-orange-300' },
+
+  { id:'sunflower', name:'Sunflower', trait:'Loves sunflowers',
+    skin:'#8b5a2b', hair:'#d4a017', hairStyle:'curlyShort', eye:'#3a2a1f',
+    dress:'#fffaf0', pattern:'towel', accessory:'sunflower',
+    bg:'from-yellow-300 via-amber-300 to-orange-400' },
+
+  { id:'drkyla', name:'Dr. Kyla', trait:'The doctor!',
+    skin:'#fce4c8', hair:'#f0d264', hairStyle:'longFlowing', eye:'#7d6443',
+    dress:'#3b5998', pattern:'floral', accessory:'whiteJacket',
+    bg:'from-rose-300 via-pink-300 to-rose-400' },
+
+  { id:'chelsea', name:'Chelsea', trait:'Loves her bunny',
+    skin:'#fce0c4', hair:'#f0d264', hairStyle:'wildStatic', eye:'#3498db',
+    dress:'#9b59b6', pattern:'unicornTop', accessory:'',
+    bg:'from-purple-300 via-fuchsia-300 to-pink-400' },
+
+  { id:'heart', name:'Heart', trait:"Loves mom Barba",
+    skin:'#fce6ce', hair:'#f4cf4c', hairStyle:'updoBangs', eye:'#5dade2',
+    dress:'#aed6f1', pattern:'lace', accessory:'bigBow',
+    bg:'from-sky-200 via-sky-300 to-blue-400' },
+
+  { id:'barba', name:'Barba', trait:'Loving mom (knee hurts)',
+    skin:'#fce0c2', hair:'#f5e9c7', hairStyle:'longSidePony', eye:'#5dade2',
+    dress:'#5dade2', pattern:'zigzag', accessory:'kneeBandage',
+    bg:'from-emerald-300 via-teal-300 to-cyan-400' },
+
+  { id:'ariel', name:'Ariel', trait:'Sea & books',
+    skin:'#e8b790', hair:'#c0392b', hairStyle:'curlyLong', eye:'#5dade2',
+    dress:'#f5b7b1', pattern:'flowers', accessory:'book',
+    bg:'from-red-400 via-rose-400 to-pink-500' },
+
+  { id:'skipper', name:'Skipper', trait:'Babysitter',
+    skin:'#e8c8a8', hair:'#bfa279', hairStyle:'longSidePony', eye:'#5dade2',
+    dress:'#ec407a', pattern:'fish', accessory:'',
+    bg:'from-pink-200 via-pink-300 to-rose-400' },
+
+  { id:'drpuppy', name:'Dr. Puppy', trait:"Kyla's helper",
+    skin:'#f5d28a', hair:'#f5d28a', hairStyle:'puppy', eye:'#3498db',
+    dress:'#f5d28a', pattern:'plain', accessory:'redBow',
+    bg:'from-orange-200 via-amber-200 to-yellow-300' },
+
+  { id:'purple', name:'Purple', trait:'Sporty star',
+    skin:'#fce0c2', hair:'#f4d03f', hairStyle:'highPony', eye:'#5dade2',
+    dress:'#9b59b6', pattern:'fluffyPants', accessory:'pinkStreak',
+    bg:'from-violet-400 via-purple-400 to-fuchsia-500' },
+
+  { id:'rosy', name:'Rosy', trait:'Loves roses',
+    skin:'#e8c8a8', hair:'#5d4037', hairStyle:'spiky', eye:'#3a2a1f',
+    dress:'#aed6f1', pattern:'flowers', accessory:'pinkRose',
+    bg:'from-rose-300 via-pink-300 to-fuchsia-300' },
+
+  { id:'shelly', name:'Shelly', trait:'Real mermaid',
+    skin:'#fce0c2', hair:'#d7bde2', hairStyle:'highPony', eye:'#7d6443',
+    dress:'#bb8fce', pattern:'scales', accessory:'shellTop',
+    bg:'from-purple-200 via-pink-200 to-rose-300' },
+
+  { id:'elsa', name:'Elsa', trait:'Plays freeze game!',
+    skin:'#fdf2e9', hair:'#fdfefe', hairStyle:'longWavy', eye:'#3498db',
+    dress:'#fdfefe', pattern:'sparkle', accessory:'snowflakes',
+    bg:'from-cyan-200 via-sky-200 to-blue-300' },
+
+  { id:'peacock', name:'Peacock', trait:'Treasure hunter',
+    skin:'#fcdcc0', hair:'#5dade2', hairStyle:'babySpiky', eye:'#5dade2',
+    dress:'#1f3a8a', pattern:'babyStripes', accessory:'peacockCrown',
+    bg:'from-blue-400 via-indigo-400 to-violet-500' },
+
+  { id:'kayla', name:'Kayla', trait:'Ballet teacher (knee hurts)',
+    skin:'#e8c8a8', hair:'#5d2d1f', hairStyle:'highPony', eye:'#5d4037',
+    dress:'#fadbd8', pattern:'hearts', accessory:'kneeAndBallet',
+    bg:'from-pink-400 via-rose-400 to-red-400' },
+];
+
+// ============= ACTIVITIES =============
+const ACTIVITIES = [
+  { id:'morning',   name:'Wake Up',     emoji:'🌅', game:'wake' },
+  { id:'breakfast', name:'Breakfast',   emoji:'🥞', game:'breakfast' },
+  { id:'bath',      name:'Bath Time',   emoji:'🛁', game:'bath' },
+  { id:'salon',     name:'Hair Salon',  emoji:'💇‍♀️', game:'salon' },
+  { id:'doctor',    name:'Doctor',      emoji:'🩺', game:'doctor' },
+  { id:'treasure',  name:'Treasure',    emoji:'💎', game:'treasure' },
+  { id:'birthday',  name:'Birthday',    emoji:'🎂', game:'birthday' },
+  { id:'dance',     name:'Dance',       emoji:'💃', game:'dance' },
+  { id:'sing',      name:'Sing',        emoji:'🎤', game:'sing' },
+  { id:'ballet',    name:'Ballet',      emoji:'🩰', game:'ballet' },
+  { id:'gym',       name:'Gymnastics',  emoji:'🤸', game:'gym' },
+  { id:'butterfly', name:'Butterflies', emoji:'🦋', game:'butterfly' },
+  { id:'freeze',    name:'Freeze!',     emoji:'❄️', game:'freeze' },
+  { id:'tea',       name:'Tea Party',   emoji:'🫖', game:'tea' },
+  { id:'story',     name:'Story',       emoji:'📚', game:'story' },
+  { id:'tv',        name:'TV Time',     emoji:'📺', game:'tv' },
+  { id:'play',      name:'Play',        emoji:'🎈', game:'play' },
+  { id:'sleep',     name:'Sleep',       emoji:'🌙', game:'sleep' },
+];
+
+// ============= SOUND =============
+const SOUND_STYLES = {
+  off:       { label:'🔇 No Sound',      icon:'🔇', vol:0,    timbre:'sine',     filter:1000, detune:0 },
+  whisper:   { label:'🤫 Whisper Quiet', icon:'🤫', vol:0.04, timbre:'sine',     filter:1500, detune:0 },
+  soft:      { label:'🌸 Soft & Mild',   icon:'🌸', vol:0.07, timbre:'sine',     filter:2000, detune:0 },
+  gentle:    { label:'🎵 Gentle',        icon:'🎵', vol:0.10, timbre:'sine',     filter:2400, detune:0 },
+  musicbox:  { label:'🎼 Music Box',     icon:'🎼', vol:0.08, timbre:'sine',     filter:3500, detune:1200 },
+  bells:     { label:'🔔 Bells',         icon:'🔔', vol:0.08, timbre:'sine',     filter:3000, detune:0, harmonic:true },
+  warm:      { label:'🌅 Warm Piano',    icon:'🌅', vol:0.10, timbre:'triangle', filter:1600, detune:0 },
+  bright:    { label:'✨ Bright',        icon:'✨', vol:0.13, timbre:'triangle', filter:3000, detune:0 },
+};
+const DEFAULT_STYLE = 'soft';
+
+let audioCtx = null;
+const getCtx = () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+};
+const N = { C5:523.25, D5:587.33, E5:659.25, F5:698.46, G5:783.99, A5:880, B5:987.77, C6:1046.5, D6:1174.66, E6:1318.51 };
+
+function playTone(freq, dur, style, delay) {
+  const cfg = SOUND_STYLES[style] || SOUND_STYLES.soft;
+  if (!cfg || cfg.vol === 0) return;
+  try {
+    const ctx = getCtx();
+    const t0 = ctx.currentTime + (delay || 0);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = cfg.filter;
+    filter.Q.value = 0.7;
+
+    // Main oscillator
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = cfg.timbre;
+    osc.frequency.value = freq * (cfg.detune ? Math.pow(2, cfg.detune / 1200) : 1);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(cfg.vol, t0 + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.08);
+    osc.connect(filter);
+    filter.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.15);
+
+    // Bell harmonic for bell style
+    if (cfg.harmonic) {
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = 'sine';
+      o2.frequency.value = freq * 2;
+      g2.gain.setValueAtTime(0, t0);
+      g2.gain.linearRampToValueAtTime(cfg.vol * 0.4, t0 + 0.04);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t0 + dur * 0.6 + 0.08);
+      o2.connect(filter);
+      filter.connect(g2).connect(ctx.destination);
+      o2.start(t0); o2.stop(t0 + dur + 0.15);
+    }
+  } catch (e) {}
+}
+
+const playMelody = (notes, style) =>
+  notes.forEach(([f, d, t]) => playTone(f, d, style, t || 0));
+
+const SOUNDS = {
+  ding:    (s) => playMelody([[N.E5,.18,0],[N.G5,.22,.12]], s),
+  pick:    (s) => playMelody([[N.C5,.10,0],[N.E5,.14,.08]], s),
+  yum:     (s) => playMelody([[N.E5,.14,0],[N.G5,.18,.10]], s),
+  brush:   (s) => playMelody([[N.E5,.10,0],[N.G5,.12,.08]], s),
+  splash:  (s) => playMelody([[N.G5,.10,0],[N.E5,.14,.08]], s),
+  heal:    (s) => playMelody([[N.C5,.16,0],[N.E5,.16,.14],[N.G5,.28,.28]], s),
+  treasure:(s) => playMelody([[N.C5,.10,0],[N.E5,.12,.10],[N.G5,.18,.20]], s),
+  blow:    (s) => playMelody([[N.A5,.14,0],[N.G5,.16,.14]], s),
+  birthday:(s) => playMelody([[N.G5,.22,0],[N.G5,.12,.28],[N.A5,.30,.42],[N.G5,.30,.78],[N.C6,.42,1.10]], s),
+  twinkle: (s) => playMelody([[N.C5,.25,0],[N.C5,.25,.30],[N.G5,.25,.60],[N.G5,.25,.90],[N.A5,.25,1.20],[N.A5,.25,1.50],[N.G5,.40,1.80]], s),
+  marylamb:(s) => playMelody([[N.E5,.20,0],[N.D5,.20,.25],[N.C5,.20,.50],[N.D5,.20,.75],[N.E5,.20,1.00],[N.E5,.20,1.25],[N.E5,.40,1.50]], s),
+  abc:     (s) => playMelody([[N.C5,.20,0],[N.C5,.20,.25],[N.G5,.20,.50],[N.G5,.20,.75],[N.A5,.20,1.00],[N.A5,.20,1.25],[N.G5,.40,1.50]], s),
+  rowboat: (s) => playMelody([[N.C5,.40,0],[N.C5,.40,.45],[N.C5,.30,.90],[N.D5,.20,1.25],[N.E5,.40,1.50]], s),
+  ballet:  (s) => playMelody([[N.E5,.22,0],[N.G5,.22,.24],[N.C6,.34,.48]], s),
+  spin:    (s) => playMelody([[N.C5,.10,0],[N.E5,.10,.10],[N.G5,.10,.20],[N.C6,.20,.30]], s),
+  jump:    (s) => playMelody([[N.G5,.12,0],[N.C6,.20,.10]], s),
+  flutter: (s) => playMelody([[N.G5,.10,0],[N.B5,.10,.08],[N.D6,.12,.16]], s),
+  freeze:  (s) => playMelody([[N.E5,.40,0]], s),
+  page:    (s) => playMelody([[N.C5,.10,0],[N.E5,.12,.08]], s),
+  star:    (s) => playMelody([[N.C6,.10,0],[N.E5,.12,.08]], s),
+  tap:     (s) => playMelody([[N.E5,.12,0]], s),
+  win:     (s) => playMelody([[N.C5,.14,0],[N.E5,.14,.14],[N.G5,.16,.28],[N.C6,.36,.44]], s),
+  lullaby: (s) => playMelody([[N.G5,.45,0],[N.E5,.45,.55],[N.C5,.80,1.10]], s),
+  pour:    (s) => playMelody([[N.E5,.30,0]], s),
+  click:   (s) => playMelody([[N.C5,.06,0]], s),
+};
+
+// ============= BARBIE SVG (improved) =============
+// Image base URL — raw GitHub for cross-origin compatibility (works in Claude previews)
+// In production on GitHub Pages, this also works fine.
+const IMG_BASE = 'https://raw.githubusercontent.com/KSJN-source/reya-barbie-world/main';
+
+function BarbieSVG({ b, size = 100, anim = '', poseSpin = false }) {
+  const [errored, setErrored] = useState(false);
+  return (
+    <div
+      className={anim}
+      style={{
+        width: size,
+        height: size * 1.45,
+        position: 'relative',
+        transformOrigin: 'center',
+      }}
+    >
+      {errored ? (
+        <div className="w-full h-full flex items-center justify-center bg-pink-100 rounded-3xl border-4 border-pink-300">
+          <div className="text-center p-2">
+            <div className="text-3xl mb-1">👧</div>
+            <div className="font-black text-pink-600 text-sm">{b.name}</div>
+          </div>
+        </div>
+      ) : (
+        <img
+          src={`${IMG_BASE}/${b.id}.png`}
+          alt={b.name}
+          draggable={false}
+          onError={() => setErrored(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+            pointerEvents: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============= COMMON UI =============
+function FloatyBg({ items, count = 14 }) {
+  const positions = useRef(
+    Array.from({ length: count }, () => ({
+      left: Math.random() * 100, top: Math.random() * 100,
+      delay: Math.random() * 6, dur: 5 + Math.random() * 6,
+      size: 16 + Math.random() * 24,
+      char: items[Math.floor(Math.random() * items.length)],
+    }))
+  ).current;
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {positions.map((p, i) => (
+        <div key={i} className="absolute opacity-50" style={{
+          left: `${p.left}%`, top: `${p.top}%`, fontSize: `${p.size}px`,
+          animation: `floaty ${p.dur}s ease-in-out ${p.delay}s infinite`,
+        }}>{p.char}</div>
+      ))}
+    </div>
+  );
+}
+
+function ChunkyButton({ onClick, children, className = '' }) {
+  return (
+    <button onClick={onClick}
+      style={{ touchAction: 'manipulation', minHeight: '60px' }}
+      className={`bg-pink-400 active:bg-pink-600 shadow-pink-700 text-white font-black text-2xl px-8 py-4 rounded-3xl shadow-[0_6px_0_currentColor] active:translate-y-1 active:shadow-[0_2px_0_currentColor] transition-all border-4 border-white ${className}`}>
+      {children}
+    </button>
+  );
+}
+
+function HeaderBar({ onBack, title, stars }) {
+  return (
+    <div className="relative z-10 flex items-center justify-between p-3">
+      <button onClick={onBack} className="bg-white rounded-2xl p-3 shadow-md border-2 border-white">
+        <ArrowLeft className="w-6 h-6 text-pink-500" />
+      </button>
+      <div className="bg-white rounded-2xl px-4 py-2 shadow-md border-4 border-white">
+        <div className="font-black text-lg text-pink-600 text-center">{title}</div>
+      </div>
+      <div className="bg-white rounded-2xl px-3 py-2 shadow-md border-2 border-yellow-300 flex items-center gap-1">
+        <Star className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+        <span className="font-black text-yellow-600">{stars}</span>
+      </div>
+    </div>
+  );
+}
+
+function ProgressBadge({ children, color = 'pink' }) {
+  const colors = {
+    pink: 'border-pink-300 text-pink-600',
+    cyan: 'border-cyan-300 text-cyan-600',
+    amber: 'border-amber-300 text-amber-600',
+    purple: 'border-purple-300 text-purple-600',
+    rose: 'border-rose-300 text-rose-600',
+    indigo: 'border-indigo-300 text-indigo-600',
+  };
+  return (
+    <div className={`bg-white rounded-full px-5 py-2 shadow-lg border-4 ${colors[color]}`}>
+      <span className={`font-black text-xl ${colors[color]}`}>{children}</span>
+    </div>
+  );
+}
+
+function OptionTile({ onClick, emoji, label, used, big = false }) {
+  return (
+    <button onClick={onClick} disabled={used}
+      style={{ minHeight: big ? '90px' : '72px', minWidth: '72px', touchAction: 'manipulation' }}
+      className={`relative bg-white rounded-2xl ${big ? 'p-3' : 'p-2'} shadow-md border-2 ${used ? 'border-gray-200 opacity-40' : 'border-pink-200 active:border-pink-500'} active:scale-95 transition-all flex flex-col items-center justify-center`}>
+      <div className={big ? 'text-5xl mb-1' : 'text-4xl'}>{emoji}</div>
+      <div className="text-xs font-black text-pink-600 leading-tight">{label}</div>
+      {used && <div className="absolute top-1 right-1 text-green-500 text-lg">✓</div>}
+    </button>
+  );
+}
+
+function Confetti() {
+  const items = useRef(
+    Array.from({ length: 30 }, () => ({
+      left: Math.random() * 100, delay: Math.random() * 0.5, dur: 1 + Math.random() * 1.5,
+      char: ['🎉','✨','⭐','💖','🌟','💕'][Math.floor(Math.random() * 6)],
+      size: 20 + Math.random() * 20,
+    }))
+  ).current;
+  return (
+    <div className="fixed inset-0 pointer-events-none z-40">
+      {items.map((p, i) => (
+        <div key={i} className="absolute" style={{
+          left: `${p.left}%`, top: '-10%', fontSize: `${p.size}px`,
+          animation: `confettiFall ${p.dur}s ease-in ${p.delay}s forwards`,
+        }}>{p.char}</div>
+      ))}
+    </div>
+  );
+}
+
+// ============= GAMES — pick from options pattern =============
+
+// Generic pick-N-options game
+function PickNGame({ b, options, onWin, soundStyle, label, color = 'pink',
+  feedback, allowRepeats = false, target = null }) {
+  const [used, setUsed] = useState({});
+  const [last, setLast] = useState(null);
+  const [floatItems, setFloatItems] = useState([]);
+  const usedCount = Object.values(used).filter(Boolean).length;
+  const finalTarget = target || options.length;
+
+  useEffect(() => { if (usedCount >= finalTarget) setTimeout(onWin, 1000); }, [usedCount]);
+
+  const pick = (opt) => {
+    if (!allowRepeats && used[opt.id]) return;
+    setUsed(u => ({ ...u, [opt.id]: true }));
+    setLast(opt);
+    SOUNDS[opt.sound || 'pick'](soundStyle);
+    if (opt.float) {
+      const newItems = Array.from({ length: 4 }, (_, i) => ({
+        id: Date.now() + i, char: opt.float,
+        x: 30 + Math.random() * 40, y: 80 + Math.random() * 10,
+      }));
+      setFloatItems(f => [...f, ...newItems]);
+      setTimeout(() => setFloatItems(f => f.filter(x => !newItems.find(n => n.id === x.id))), 1500);
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color={color}>{label} {usedCount}/{finalTarget}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={200} anim={last ? 'animate-bounce' : ''} />
+        {floatItems.map(f => (
+          <div key={f.id} className="absolute text-4xl pointer-events-none"
+            style={{ left: `${f.x}%`, top: `${f.y}%`, animation: 'floatUp 1.5s ease-out forwards' }}>
+            {f.char}
+          </div>
+        ))}
+        {last && feedback && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-lg border-2 border-pink-300 whitespace-nowrap"
+            style={{ animation: 'popIn 0.4s ease-out' }}>
+            <span className="text-sm font-black text-pink-600">{feedback(last)}</span>
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-4 gap-2">
+          {options.map(opt => (
+            <OptionTile key={opt.id} onClick={() => pick(opt)} emoji={opt.emoji} label={opt.label}
+              used={!allowRepeats && used[opt.id]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Wake Up — pick 3 alarm methods
+function WakeGame({ b, onWin, soundStyle }) {
+  const opts = [
+    { id:'sun',     emoji:'☀️', label:'Sun',     float:'☀️', sound:'ding' },
+    { id:'bell',    emoji:'🔔', label:'Bell',    float:'✨',  sound:'ding' },
+    { id:'rooster', emoji:'🐔', label:'Rooster', float:'🌟', sound:'pick' },
+    { id:'music',   emoji:'🎵', label:'Music',   float:'🎶', sound:'twinkle' },
+    { id:'kiss',    emoji:'💋', label:'Kiss',    float:'💖', sound:'star' },
+    { id:'tickle',  emoji:'🪶', label:'Tickle',  float:'😄', sound:'flutter' },
+    { id:'cuddle',  emoji:'🧸', label:'Cuddle',  float:'💕', sound:'lullaby' },
+    { id:'puppy',   emoji:'🐶', label:'Puppy',   float:'❤️', sound:'pick' },
+  ];
+  return <PickNGame b={b} options={opts} target={4} color="pink" label="🌅 Wake her up!"
+    onWin={onWin} soundStyle={soundStyle}
+    feedback={(o) => `${o.emoji} ${o.label}!`} />;
+}
+
+// Breakfast — pick foods to feed
+function BreakfastGame({ b, onWin, soundStyle }) {
+  const opts = [
+    { id:'pancakes', emoji:'🥞', label:'Pancakes', float:'😋', sound:'yum' },
+    { id:'strawberry', emoji:'🍓', label:'Berry',  float:'❤️', sound:'yum' },
+    { id:'milk',     emoji:'🥛', label:'Milk',     float:'💧', sound:'pour' },
+    { id:'waffle',   emoji:'🧇', label:'Waffle',   float:'😋', sound:'yum' },
+    { id:'banana',   emoji:'🍌', label:'Banana',   float:'😋', sound:'yum' },
+    { id:'cookie',   emoji:'🍪', label:'Cookie',   float:'😋', sound:'yum' },
+    { id:'apple',    emoji:'🍎', label:'Apple',    float:'😋', sound:'yum' },
+    { id:'juice',    emoji:'🧃', label:'Juice',    float:'💧', sound:'pour' },
+    { id:'eggs',     emoji:'🍳', label:'Eggs',     float:'😋', sound:'yum' },
+    { id:'cereal',   emoji:'🥣', label:'Cereal',   float:'😋', sound:'yum' },
+    { id:'croissant',emoji:'🥐', label:'Croissant',float:'😋', sound:'yum' },
+    { id:'cupcake',  emoji:'🧁', label:'Cupcake',  float:'💕', sound:'yum' },
+  ];
+  return <PickNGame b={b} options={opts} target={6} color="amber" label="🥞 Yummy!"
+    onWin={onWin} soundStyle={soundStyle}
+    feedback={(o) => `Yum! ${o.emoji}`} />;
+}
+
+// Bath — pick scrubber, then tap dirty spot to clean it
+function BathGame({ b, onWin, soundStyle }) {
+  const tools = [
+    { id:'soap',     emoji:'🧼', label:'Soap',     bubble:'🫧' },
+    { id:'scrubber', emoji:'🧽', label:'Scrubber', bubble:'✨' },
+    { id:'shower',   emoji:'🚿', label:'Shower',   bubble:'💧' },
+    { id:'bubbles',  emoji:'🛁', label:'Bubbles',  bubble:'🫧' },
+    { id:'shampoo',  emoji:'🧴', label:'Shampoo',  bubble:'🫧' },
+    { id:'sponge',   emoji:'🧻', label:'Sponge',   bubble:'✨' },
+  ];
+  const [tool, setTool] = useState(tools[0]);
+  const [spots, setSpots] = useState(() =>
+    Array.from({ length: 6 }, (_, i) => ({
+      id: i, x: 25 + Math.random() * 50, y: 55 + Math.random() * 60, clean: false,
+    }))
+  );
+  const [bubbles, setBubbles] = useState([]);
+  const remaining = spots.filter(s => !s.clean).length;
+  useEffect(() => { if (remaining === 0) setTimeout(onWin, 800); }, [remaining]);
+
+  const cleanSpot = (id, x, y) => {
+    setSpots(ss => ss.map(sp => sp.id === id ? { ...sp, clean: true } : sp));
+    SOUNDS.splash(soundStyle);
+    const newBubbles = Array.from({ length: 5 }, (_, i) => ({
+      id: Date.now() + i, x, y, char: tool.bubble,
+      dx: (Math.random() - 0.5) * 20, dy: -15 - Math.random() * 15,
+    }));
+    setBubbles(bb => [...bb, ...newBubbles]);
+    setTimeout(() => setBubbles(bb => bb.filter(b => !newBubbles.find(n => n.id === b.id))), 1200);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="cyan">🛁 Pick a tool, then tap dirt! ({remaining} left)</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} />
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 145">
+          {spots.map(s => !s.clean && (
+            <g key={s.id} onClick={(e) => { e.stopPropagation(); cleanSpot(s.id, s.x, s.y); }}
+              style={{ cursor:'pointer', pointerEvents:'all' }}>
+              <circle cx={s.x} cy={s.y} r="6" fill="#7d4f00" opacity="0.85" />
+              <circle cx={s.x - 1.5} cy={s.y - 1.5} r="2" fill="#5d3a00" opacity="0.85" />
+            </g>
+          ))}
+          {bubbles.map(bub => (
+            <text key={bub.id} x={bub.x + bub.dx} y={bub.y + bub.dy} fontSize="6"
+              style={{ animation: 'bubbleUp 1.2s ease-out forwards' }}>
+              {bub.char}
+            </text>
+          ))}
+        </svg>
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="text-center text-sm font-black text-cyan-600 mb-1">Pick a tool: {tool.emoji} {tool.label}</div>
+        <div className="grid grid-cols-6 gap-2">
+          {tools.map(t => (
+            <button key={t.id} onClick={() => { setTool(t); SOUNDS.click(soundStyle); }}
+              className={`bg-white rounded-xl p-2 shadow border-2 ${tool.id === t.id ? 'border-cyan-500 ring-2 ring-cyan-300' : 'border-cyan-200'} active:scale-95`}>
+              <div className="text-3xl">{t.emoji}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Salon — pick tool & color
+function SalonGame({ b, onWin, soundStyle }) {
+  const [hair, setHair] = useState(b.hair);
+  const [tool, setTool] = useState('brush');
+  const [accessory, setAccessory] = useState(null);
+  const [sparkles, setSparkles] = useState([]);
+  const [picks, setPicks] = useState({});
+  const tools = [
+    { id:'brush', emoji:'🪮', label:'Brush' },
+    { id:'cut',   emoji:'✂️', label:'Trim' },
+    { id:'dye',   emoji:'🎨', label:'Color' },
+    { id:'spray', emoji:'💦', label:'Spray' },
+    { id:'curl',  emoji:'🌀', label:'Curl' },
+    { id:'bow',   emoji:'🎀', label:'Bow' },
+  ];
+  const colors = ['#f4d03f','#fdfefe','#5d4037','#c0392b','#d7bde2','#5dade2','#e91e63','#9b59b6'];
+
+  const apply = (e, char = '✨') => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = (e.touches?.[0]?.clientX || e.clientX) - rect.left;
+    const cy = (e.touches?.[0]?.clientY || e.clientY) - rect.top;
+    setSparkles(s => [...s, { id: Date.now() + Math.random(), x: (cx / rect.width) * 100, y: (cy / rect.height) * 100, char }].slice(-12));
+    SOUNDS.brush(soundStyle);
+    setPicks(p => ({ ...p, [tool]: true }));
+  };
+
+  const onHover = (e) => { if (e.buttons || e.touches) apply(e, '✨'); };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-2">
+      <ProgressBadge color="pink">💇‍♀️ Pick tool: {tools.find(t => t.id === tool).emoji}</ProgressBadge>
+      <div className="relative" onMouseMove={onHover} onTouchMove={onHover}>
+        <BarbieSVG b={{ ...b, hair, accessory: accessory || b.accessory }} size={220} />
+        {sparkles.map(s => (
+          <div key={s.id} className="absolute text-2xl pointer-events-none"
+            style={{ left: `${s.x}%`, top: `${s.y}%`, animation: 'sparkleOut 1s ease-out forwards' }}>
+            {s.char}
+          </div>
+        ))}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-6 gap-2 mb-2">
+          {tools.map(t => (
+            <button key={t.id} onClick={() => { setTool(t.id); SOUNDS.click(soundStyle); }}
+              className={`bg-white rounded-xl p-1.5 shadow border-2 ${tool === t.id ? 'border-pink-500 ring-2 ring-pink-300' : 'border-pink-200'} active:scale-95`}>
+              <div className="text-2xl">{t.emoji}</div>
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-8 gap-1">
+          {colors.map(c => (
+            <button key={c} onClick={() => { setHair(c); SOUNDS.ding(soundStyle); setPicks(p => ({ ...p, dye: true })); }}
+              className="w-9 h-9 rounded-full border-4 border-white shadow active:scale-90"
+              style={{ backgroundColor: c }} />
+          ))}
+        </div>
+        <button onClick={() => { setAccessory('bigBow'); SOUNDS.ding(soundStyle); setPicks(p => ({ ...p, bow: true })); }}
+          className="w-full mt-2 bg-pink-100 border-2 border-pink-300 rounded-xl py-1 font-black text-pink-600 text-sm active:scale-95">
+          Add a 🎀 Bow!
+        </button>
+      </div>
+      <ChunkyButton onClick={onWin} className="!text-xl !px-6 !py-3">✨ All Done! ✨</ChunkyButton>
+    </div>
+  );
+}
+
+// Doctor — pick tool, then tap ouchie
+function DoctorGame({ b, onWin, soundStyle }) {
+  const tools = [
+    { id:'bandage',   emoji:'🩹', label:'Bandage' },
+    { id:'medicine',  emoji:'💊', label:'Pill' },
+    { id:'thermometer', emoji:'🌡️', label:'Temp' },
+    { id:'shot',      emoji:'💉', label:'Shot' },
+    { id:'love',      emoji:'❤️', label:'Love' },
+    { id:'kiss',      emoji:'💋', label:'Kiss' },
+  ];
+  const [tool, setTool] = useState(tools[0]);
+  const [ouchies, setOuchies] = useState(() =>
+    Array.from({ length: 5 }, (_, i) => ({
+      id: i, x: 25 + Math.random() * 50, y: 60 + Math.random() * 50, healed: false,
+    }))
+  );
+  const remaining = ouchies.filter(o => !o.healed).length;
+  useEffect(() => { if (remaining === 0) setTimeout(onWin, 800); }, [remaining]);
+
+  return (
+    <div className="w-full flex flex-col items-center gap-2">
+      <ProgressBadge color="rose">🩺 Use {tool.emoji} on ouchies! ({remaining} left)</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} />
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 145">
+          {ouchies.map(o => (
+            <g key={o.id} onClick={(e) => { e.stopPropagation(); setOuchies(os => os.map(x => x.id === o.id ? { ...x, healed: true } : x)); SOUNDS.heal(soundStyle); }}
+              style={{ cursor:'pointer', pointerEvents:'all' }}>
+              {!o.healed ? <>
+                <circle cx={o.x} cy={o.y} r="5" fill="#e74c3c" />
+                <text x={o.x - 1.5} y={o.y + 2.5} fontSize="7" fill="#fff" fontWeight="bold">!</text>
+              </> : (
+                <text x={o.x - 4} y={o.y + 3} fontSize="9" style={{ animation: 'popIn 0.4s ease-out' }}>
+                  {tool.emoji}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="text-center text-sm font-black text-rose-600 mb-1">Pick a tool:</div>
+        <div className="grid grid-cols-6 gap-2">
+          {tools.map(t => (
+            <button key={t.id} onClick={() => { setTool(t); SOUNDS.click(soundStyle); }}
+              className={`bg-white rounded-xl p-2 shadow border-2 ${tool.id === t.id ? 'border-rose-500 ring-2 ring-rose-300' : 'border-rose-200'} active:scale-95`}>
+              <div className="text-3xl">{t.emoji}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Treasure — pick a location, see gems revealed
+function TreasureGame({ b, onWin, soundStyle }) {
+  const locations = [
+    { id:'beach',    emoji:'🏝️', label:'Beach',    gems:['💎','🐚','🌟'] },
+    { id:'mountain', emoji:'🏔️', label:'Mountain', gems:['💍','💎','💰'] },
+    { id:'ocean',    emoji:'🌊', label:'Ocean',    gems:['🦪','💎','🪙'] },
+    { id:'forest',   emoji:'🌳', label:'Forest',   gems:['🍄','✨','🪙'] },
+    { id:'cave',     emoji:'🕳️', label:'Cave',    gems:['💎','🦴','💰'] },
+    { id:'castle',   emoji:'🏰', label:'Castle',   gems:['👑','💍','💎'] },
+  ];
+  const [done, setDone] = useState({});
+  const [showing, setShowing] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 1000); }, [doneCount]);
+
+  const pick = (loc) => {
+    if (done[loc.id]) return;
+    setDone(d => ({ ...d, [loc.id]: loc.gems }));
+    setShowing(loc);
+    SOUNDS.treasure(soundStyle);
+    setTimeout(() => setShowing(null), 1500);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="amber">💎 Pick {target} places! {doneCount}/{target}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={160} anim={showing ? 'animate-bounce' : ''} />
+        {showing && (
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white rounded-2xl px-3 py-1 shadow-lg border-4 border-amber-300 flex gap-1"
+            style={{ animation: 'popIn 0.4s ease-out' }}>
+            {showing.gems.map((g, i) => (
+              <span key={i} className="text-3xl" style={{ animation: `pop 0.6s ease-out ${i * 0.1}s` }}>{g}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {locations.map(loc => (
+            <OptionTile key={loc.id} onClick={() => pick(loc)} emoji={loc.emoji} label={loc.label}
+              used={done[loc.id]} big />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Birthday — pick cake, blow candles, pick gift
+function BirthdayGame({ b, onWin, soundStyle }) {
+  const cakes = [
+    { id:'strawberry', emoji:'🍓', label:'Strawberry', color:'from-pink-200 to-pink-300' },
+    { id:'chocolate',  emoji:'🍫', label:'Chocolate',  color:'from-amber-700 to-amber-900' },
+    { id:'rainbow',    emoji:'🌈', label:'Rainbow',    color:'from-pink-300 via-yellow-300 to-purple-300' },
+    { id:'unicorn',    emoji:'🦄', label:'Unicorn',    color:'from-purple-200 to-pink-200' },
+  ];
+  const gifts = [
+    { id:'teddy',  emoji:'🧸', label:'Teddy' },
+    { id:'doll',   emoji:'🎎', label:'Doll' },
+    { id:'flower', emoji:'💐', label:'Flowers' },
+    { id:'pet',    emoji:'🐶', label:'Puppy' },
+  ];
+  const [stage, setStage] = useState('cake'); // cake | candles | gift
+  const [cake, setCake] = useState(null);
+  const [candles, setCandles] = useState([0,1,2,3,4].map(id => ({ id, lit: true })));
+  const [gift, setGift] = useState(null);
+  const lit = candles.filter(c => c.lit).length;
+
+  useEffect(() => {
+    if (stage === 'candles' && lit === 0) {
+      SOUNDS.birthday(soundStyle);
+      setTimeout(() => setStage('gift'), 1500);
+    }
+  }, [stage, lit, soundStyle]);
+
+  useEffect(() => { if (gift) setTimeout(onWin, 1500); }, [gift]);
+
+  if (stage === 'cake') return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="pink">🎂 1. Pick a cake!</ProgressBadge>
+      <BarbieSVG b={b} size={160} />
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-2 gap-2">
+          {cakes.map(c => (
+            <button key={c.id} onClick={() => { setCake(c); SOUNDS.ding(soundStyle); setTimeout(() => setStage('candles'), 600); }}
+              className={`bg-gradient-to-br ${c.color} rounded-2xl p-4 shadow border-4 border-white active:scale-95`}>
+              <div className="text-5xl">{c.emoji}</div>
+              <div className="font-black text-sm text-white drop-shadow">{c.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (stage === 'candles') return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="pink">🎂 2. Blow candles! ({lit} left)</ProgressBadge>
+      <BarbieSVG b={b} size={140} anim={lit === 0 ? 'animate-bounce' : ''} />
+      <div className={`relative bg-gradient-to-b ${cake.color} rounded-3xl p-6 border-4 border-pink-400 shadow-2xl`}>
+        <div className="flex items-end gap-3 justify-center mb-2">
+          {candles.map(c => (
+            <button key={c.id} onClick={() => { if (c.lit) { setCandles(cs => cs.map(cd => cd.id === c.id ? { ...cd, lit: false } : cd)); SOUNDS.blow(soundStyle); } }}
+              className="flex flex-col items-center active:scale-90">
+              {c.lit ? <div className="text-4xl animate-pulse mb-[-4px]">🔥</div> : <div className="text-2xl mb-[-4px] opacity-60">💨</div>}
+              <div className="w-3 h-14 bg-yellow-200 rounded-t border-2 border-yellow-400" />
+            </button>
+          ))}
+        </div>
+        <div className="bg-amber-300 rounded-xl p-3 text-center text-3xl">{cake.emoji}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="pink">🎁 3. Pick a gift!</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={160} anim={gift ? 'animate-bounce' : ''} />
+        {gift && (
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-6xl" style={{ animation: 'popIn 0.5s ease-out' }}>
+            {gift.emoji}
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-4 gap-2">
+          {gifts.map(g => (
+            <button key={g.id} onClick={() => { setGift(g); SOUNDS.win(soundStyle); }}
+              className="bg-white rounded-2xl p-3 shadow border-4 border-white active:scale-95">
+              <div className="text-5xl">{g.emoji}</div>
+              <div className="font-black text-xs text-pink-600">{g.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Dance — pick a style, Barbie dances
+function DanceGame({ b, onWin, soundStyle }) {
+  const dances = [
+    { id:'ballet',  emoji:'🩰', label:'Ballet',  anim:'spin', sound:'ballet' },
+    { id:'disco',   emoji:'🕺', label:'Disco',   anim:'wiggle', sound:'spin' },
+    { id:'hiphop',  emoji:'🎤', label:'Hip Hop', anim:'bounce', sound:'tap' },
+    { id:'ballroom',emoji:'💃', label:'Waltz',   anim:'sway',  sound:'twinkle' },
+    { id:'tap',     emoji:'👞', label:'Tap',     anim:'jump',  sound:'tap' },
+    { id:'salsa',   emoji:'🔥', label:'Salsa',   anim:'wiggle', sound:'spin' },
+    { id:'jazz',    emoji:'🎷', label:'Jazz',    anim:'sway',  sound:'twinkle' },
+    { id:'freestyle',emoji:'🎶', label:'Free',   anim:'bounce', sound:'tap' },
+  ];
+  const [done, setDone] = useState({});
+  const [active, setActive] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 1000); }, [doneCount]);
+
+  const pick = (d) => {
+    if (done[d.id]) return;
+    setActive(d);
+    SOUNDS[d.sound](soundStyle);
+    setTimeout(() => {
+      setDone(x => ({ ...x, [d.id]: true }));
+      setActive(null);
+    }, 1800);
+  };
+
+  const animClass = active ?
+    (active.anim === 'spin' ? 'animate-[spin_1s_linear_infinite]' :
+     active.anim === 'wiggle' ? 'animate-[wiggle_0.4s_ease-in-out_infinite]' :
+     active.anim === 'bounce' ? 'animate-bounce' :
+     active.anim === 'sway' ? 'animate-[sway_1.5s_ease-in-out_infinite]' :
+     active.anim === 'jump' ? 'animate-[jump_0.6s_ease-in-out_infinite]' : '')
+    : '';
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="purple">💃 Pick a dance! {doneCount}/{target}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} anim={animClass} />
+        {active && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-lg border-2 border-purple-300 whitespace-nowrap">
+            <span className="font-black text-purple-600">{active.emoji} {active.label}!</span>
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-4 gap-2">
+          {dances.map(d => (
+            <OptionTile key={d.id} onClick={() => pick(d)} emoji={d.emoji} label={d.label} used={done[d.id]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Sing — pick a song, melody plays
+function SingGame({ b, onWin, soundStyle }) {
+  const songs = [
+    { id:'twinkle',  emoji:'🌟', label:'Twinkle',  sound:'twinkle' },
+    { id:'mary',     emoji:'🐑', label:"Mary's Lamb", sound:'marylamb' },
+    { id:'abc',      emoji:'🔤', label:'ABCs',     sound:'abc' },
+    { id:'birthday', emoji:'🎂', label:'Happy Bday',sound:'birthday' },
+    { id:'rowboat',  emoji:'🚣', label:'Row Boat', sound:'rowboat' },
+    { id:'lullaby',  emoji:'🌙', label:'Lullaby',  sound:'lullaby' },
+  ];
+  const [done, setDone] = useState({});
+  const [active, setActive] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 800); }, [doneCount]);
+
+  const pick = (s) => {
+    if (done[s.id]) return;
+    setActive(s);
+    SOUNDS[s.sound](soundStyle);
+    setTimeout(() => { setDone(x => ({ ...x, [s.id]: true })); setActive(null); }, 2000);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="pink">🎤 Pick a song! {doneCount}/{target}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} anim={active ? 'animate-pulse' : ''} />
+        <div className="absolute -top-4 -right-4 text-5xl">🎤</div>
+        {active && <>
+          <div className="absolute -top-4 -left-8 text-4xl animate-bounce">🎵</div>
+          <div className="absolute top-12 -right-12 text-4xl animate-bounce" style={{ animationDelay: '0.3s' }}>🎶</div>
+        </>}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {songs.map(s => (
+            <OptionTile key={s.id} onClick={() => pick(s)} emoji={s.emoji} label={s.label} used={done[s.id]} big />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Ballet — pick moves
+function BalletGame({ b, onWin, soundStyle }) {
+  const moves = [
+    { id:'plie',     emoji:'🦵', label:'Plié',    anim:'bend' },
+    { id:'spin',     emoji:'💫', label:'Spin',    anim:'spin' },
+    { id:'leap',     emoji:'🦋', label:'Leap',    anim:'jump' },
+    { id:'curtsy',   emoji:'👑', label:'Curtsy',  anim:'sway' },
+    { id:'arabesque',emoji:'🌹', label:'Pose',    anim:'sway' },
+    { id:'pirouette',emoji:'🌀', label:'Twirl',   anim:'spin' },
+  ];
+  const [done, setDone] = useState({});
+  const [active, setActive] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 800); }, [doneCount]);
+
+  const pick = (m) => {
+    if (done[m.id]) return;
+    setActive(m);
+    SOUNDS.ballet(soundStyle);
+    setTimeout(() => { setDone(x => ({ ...x, [m.id]: true })); setActive(null); }, 1800);
+  };
+
+  const animClass = active ?
+    (active.anim === 'spin' ? 'animate-[spin_1s_linear_infinite]' :
+     active.anim === 'jump' ? 'animate-[jump_0.6s_ease-in-out_infinite]' :
+     active.anim === 'sway' ? 'animate-[sway_1.5s_ease-in-out_infinite]' :
+     active.anim === 'bend' ? 'animate-[bend_1s_ease-in-out_infinite]' : '')
+    : '';
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="rose">🩰 Pick a move! {doneCount}/{target}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} anim={animClass} />
+        {active && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-lg border-2 border-rose-300 whitespace-nowrap">
+            <span className="font-black text-rose-600">{active.emoji} {active.label}!</span>
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {moves.map(m => (
+            <OptionTile key={m.id} onClick={() => pick(m)} emoji={m.emoji} label={m.label} used={done[m.id]} big />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Gym — pick gymnastics moves
+function GymGame({ b, onWin, soundStyle }) {
+  const moves = [
+    { id:'cartwheel', emoji:'🤸', label:'Cartwheel', anim:'spin' },
+    { id:'flip',      emoji:'🤹', label:'Flip',      anim:'jump' },
+    { id:'split',     emoji:'🦵', label:'Split',     anim:'bend' },
+    { id:'jump',      emoji:'⬆️',  label:'Jump',     anim:'jump' },
+    { id:'yoga',      emoji:'🧘', label:'Yoga',      anim:'sway' },
+    { id:'stretch',   emoji:'💪', label:'Stretch',   anim:'sway' },
+  ];
+  const [done, setDone] = useState({});
+  const [active, setActive] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 800); }, [doneCount]);
+
+  const pick = (m) => {
+    if (done[m.id]) return;
+    setActive(m);
+    SOUNDS.jump(soundStyle);
+    setTimeout(() => { setDone(x => ({ ...x, [m.id]: true })); setActive(null); }, 1800);
+  };
+
+  const animClass = active ?
+    (active.anim === 'spin' ? 'animate-[spin_0.8s_linear_infinite]' :
+     active.anim === 'jump' ? 'animate-[jump_0.5s_ease-in-out_infinite]' :
+     active.anim === 'sway' ? 'animate-[sway_1.5s_ease-in-out_infinite]' :
+     active.anim === 'bend' ? 'animate-[bend_1s_ease-in-out_infinite]' : '')
+    : '';
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="purple">🤸 Pick a move! {doneCount}/{target}</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={220} anim={animClass} />
+        {active && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-lg border-2 border-purple-300 whitespace-nowrap">
+            <span className="font-black text-purple-600">{active.emoji} {active.label}!</span>
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {moves.map(m => (
+            <OptionTile key={m.id} onClick={() => pick(m)} emoji={m.emoji} label={m.label} used={done[m.id]} big />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Butterfly — pick a flower, butterflies appear
+function ButterflyGame({ b, onWin, soundStyle }) {
+  const flowers = [
+    { id:'sunflower', emoji:'🌻', label:'Sunflower', count:3 },
+    { id:'rose',      emoji:'🌹', label:'Rose',      count:4 },
+    { id:'tulip',     emoji:'🌷', label:'Tulip',     count:3 },
+    { id:'cherry',    emoji:'🌸', label:'Cherry',    count:5 },
+    { id:'daisy',     emoji:'🌼', label:'Daisy',     count:3 },
+    { id:'hibiscus',  emoji:'🌺', label:'Hibiscus',  count:4 },
+  ];
+  const [done, setDone] = useState({});
+  const [showing, setShowing] = useState(null);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 800); }, [doneCount]);
+
+  const pick = (f) => {
+    if (done[f.id]) return;
+    setShowing(f);
+    SOUNDS.flutter(soundStyle);
+    setTimeout(() => { setDone(x => ({ ...x, [f.id]: true })); setShowing(null); }, 2000);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="cyan">🦋 Pick a flower! {doneCount}/{target}</ProgressBadge>
+      <div className="relative h-56 w-full max-w-sm">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+          <BarbieSVG b={b} size={180} anim={showing ? 'animate-bounce' : ''} />
+        </div>
+        {showing && (
+          <>
+            <div className="absolute bottom-2 right-4 text-7xl">{showing.emoji}</div>
+            {Array.from({ length: showing.count }).map((_, i) => (
+              <div key={i} className="absolute text-4xl"
+                style={{
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${10 + Math.random() * 50}%`,
+                  animation: 'butterfly 1.5s ease-in-out infinite',
+                  animationDelay: `${i * 0.2}s`,
+                }}>🦋</div>
+            ))}
+          </>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {flowers.map(f => (
+            <OptionTile key={f.id} onClick={() => pick(f)} emoji={f.emoji} label={f.label} used={done[f.id]} big />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Freeze — pick a song first, then play the freeze game
+function FreezeGame({ b, onWin, soundStyle }) {
+  const songs = [
+    { id:'twinkle', emoji:'🌟', label:'Twinkle', sound:'twinkle' },
+    { id:'abc',     emoji:'🔤', label:'ABCs',    sound:'abc' },
+    { id:'mary',    emoji:'🐑', label:"Mary",    sound:'marylamb' },
+    { id:'row',     emoji:'🚣', label:'Row',     sound:'rowboat' },
+  ];
+  const [song, setSong] = useState(null);
+  const [frozen, setFrozen] = useState(false);
+  const [score, setScore] = useState(0);
+  const target = 6;
+
+  useEffect(() => {
+    if (!song) return;
+    if (score >= target) { setTimeout(onWin, 800); return; }
+    const t = setTimeout(() => {
+      setFrozen(f => {
+        const nf = !f;
+        if (nf) SOUNDS.freeze(soundStyle); else SOUNDS[song.sound](soundStyle);
+        return nf;
+      });
+    }, frozen ? 1500 : 2200);
+    return () => clearTimeout(t);
+  }, [frozen, score, song]);
+
+  if (!song) return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="cyan">❄️ Pick a song to dance to!</ProgressBadge>
+      <BarbieSVG b={b} size={180} />
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-2 gap-2">
+          {songs.map(s => (
+            <button key={s.id} onClick={() => { setSong(s); SOUNDS[s.sound](soundStyle); }}
+              className="bg-white rounded-2xl p-4 shadow border-4 border-white active:scale-95">
+              <div className="text-5xl">{s.emoji}</div>
+              <div className="font-black text-pink-600">{s.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <div className={`rounded-full px-5 py-2 shadow-lg border-4 ${frozen ? 'bg-cyan-300 border-cyan-500' : 'bg-pink-200 border-pink-400'}`}>
+        <span className="font-black text-xl">
+          {frozen ? '❄️ FREEZE! Don\'t tap!' : '🎵 DANCE! Tap her!'}
+        </span>
+      </div>
+      <div className="text-2xl font-black text-pink-600">Score: {score}/{target}</div>
+      <button onClick={() => {
+        if (frozen) { setScore(0); SOUNDS.freeze(soundStyle); }
+        else { setScore(s => s + 1); SOUNDS.tap(soundStyle); }
+      }} className="relative active:scale-95 transition-transform">
+        <BarbieSVG b={b} anim={frozen ? '' : 'animate-bounce'} size={240} />
+        {frozen && <div className="absolute inset-0 flex items-center justify-center text-9xl pointer-events-none">❄️</div>}
+      </button>
+    </div>
+  );
+}
+
+// Tea Party — pick a tea + a cookie + a friend
+function TeaGame({ b, onWin, soundStyle }) {
+  const teas = [
+    { id:'chamomile', emoji:'🌼', label:'Chamomile' },
+    { id:'green',     emoji:'🍵', label:'Green' },
+    { id:'milk',      emoji:'🥛', label:'Milk' },
+    { id:'rose',      emoji:'🌹', label:'Rose' },
+  ];
+  const cookies = [
+    { id:'choc',     emoji:'🍪', label:'Cookie' },
+    { id:'macaron',  emoji:'🧁', label:'Cupcake' },
+    { id:'cake',     emoji:'🍰', label:'Cake' },
+    { id:'donut',    emoji:'🍩', label:'Donut' },
+  ];
+  const [tea, setTea] = useState(null);
+  const [cookie, setCookie] = useState(null);
+  useEffect(() => { if (tea && cookie) setTimeout(onWin, 1500); }, [tea, cookie]);
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="rose">🫖 Pick tea + treat!</ProgressBadge>
+      <div className="relative">
+        <BarbieSVG b={b} size={180} anim={tea && cookie ? 'animate-bounce' : ''} />
+        {(tea || cookie) && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white rounded-2xl px-3 py-1 shadow-lg border-4 border-rose-300 flex gap-2">
+            {tea && <span className="text-4xl">{tea.emoji}</span>}
+            {cookie && <span className="text-4xl">{cookie.emoji}</span>}
+          </div>
+        )}
+      </div>
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="text-center text-sm font-black text-rose-600 mb-1">Pick tea:</div>
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {teas.map(t => (
+            <button key={t.id} onClick={() => { setTea(t); SOUNDS.pour(soundStyle); }}
+              className={`bg-white rounded-xl p-2 shadow border-2 ${tea?.id === t.id ? 'border-rose-500 ring-2 ring-rose-300' : 'border-rose-200'} active:scale-95`}>
+              <div className="text-3xl">{t.emoji}</div>
+              <div className="text-xs font-black text-rose-600">{t.label}</div>
+            </button>
+          ))}
+        </div>
+        <div className="text-center text-sm font-black text-rose-600 mb-1">Pick treat:</div>
+        <div className="grid grid-cols-4 gap-2">
+          {cookies.map(c => (
+            <button key={c.id} onClick={() => { setCookie(c); SOUNDS.yum(soundStyle); }}
+              className={`bg-white rounded-xl p-2 shadow border-2 ${cookie?.id === c.id ? 'border-rose-500 ring-2 ring-rose-300' : 'border-rose-200'} active:scale-95`}>
+              <div className="text-3xl">{c.emoji}</div>
+              <div className="text-xs font-black text-rose-600">{c.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Story — pick a book, read pages
+function StoryGame({ b, onWin, soundStyle }) {
+  const books = [
+    { id:'princess', emoji:'🏰', label:'Princess', pages: [
+      { emoji:'🏰', text: `${b.name} lived in a castle...` },
+      { emoji:'👑', text: `She was a brave princess...` },
+      { emoji:'💖', text: `And lived happily ever after!` },
+    ]},
+    { id:'dragon', emoji:'🐉', label:'Dragon', pages: [
+      { emoji:'🐉', text: `${b.name} met a friendly dragon...` },
+      { emoji:'🔥', text: `They flew over mountains...` },
+      { emoji:'🌈', text: `What an adventure!` },
+    ]},
+    { id:'mermaid', emoji:'🧜‍♀️', label:'Mermaid', pages: [
+      { emoji:'🌊', text: `Deep in the ocean...` },
+      { emoji:'🐚', text: `${b.name} found a magic shell...` },
+      { emoji:'✨', text: `It granted her wishes!` },
+    ]},
+    { id:'unicorn', emoji:'🦄', label:'Unicorn', pages: [
+      { emoji:'🦄', text: `${b.name} found a unicorn...` },
+      { emoji:'🌈', text: `It had rainbow magic...` },
+      { emoji:'⭐', text: `They became best friends!` },
+    ]},
+  ];
+  const [book, setBook] = useState(null);
+  const [page, setPage] = useState(0);
+
+  if (!book) return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="amber">📚 Pick a story!</ProgressBadge>
+      <BarbieSVG b={b} size={160} />
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-2 gap-2">
+          {books.map(bk => (
+            <button key={bk.id} onClick={() => { setBook(bk); SOUNDS.page(soundStyle); }}
+              className="bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl p-4 shadow border-4 border-amber-700 active:scale-95">
+              <div className="text-5xl">{bk.emoji}</div>
+              <div className="font-black text-amber-900">{bk.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const next = () => {
+    SOUNDS.page(soundStyle);
+    if (page === book.pages.length - 1) onWin();
+    else setPage(p => p + 1);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="amber">📖 {book.label}</ProgressBadge>
+      <BarbieSVG b={b} size={130} />
+      <button onClick={next} className="bg-gradient-to-br from-amber-100 to-amber-200 border-8 border-amber-700 rounded-3xl p-6 shadow-2xl max-w-sm active:scale-95">
+        <div className="text-7xl text-center mb-3">{book.pages[page].emoji}</div>
+        <div className="text-amber-900 font-black text-lg text-center">{book.pages[page].text}</div>
+        <div className="text-center mt-3 text-amber-700 font-bold text-sm">Tap to turn page →</div>
+      </button>
+    </div>
+  );
+}
+
+// TV — pick a channel
+function TVGame({ b, onWin, soundStyle }) {
+  const channels = [
+    { id:'rainbow', bg:'from-pink-300 via-yellow-300 to-purple-300', emoji:'🌈', label:'Rainbow' },
+    { id:'bunny',   bg:'from-orange-200 to-yellow-300', emoji:'🐰', label:'Bunnies' },
+    { id:'unicorn', bg:'from-purple-200 to-pink-300',   emoji:'🦄', label:'Unicorns' },
+    { id:'ocean',   bg:'from-cyan-300 to-blue-400',     emoji:'🐠', label:'Ocean' },
+    { id:'garden',  bg:'from-green-200 to-emerald-300', emoji:'🦋', label:'Garden' },
+    { id:'space',   bg:'from-indigo-700 to-purple-900', emoji:'🚀', label:'Space' },
+  ];
+  const [done, setDone] = useState({});
+  const [ch, setCh] = useState(channels[0]);
+  const target = 4;
+  const doneCount = Object.keys(done).length;
+  useEffect(() => { if (doneCount >= target) setTimeout(onWin, 800); }, [doneCount]);
+
+  const pick = (c) => {
+    setCh(c);
+    setDone(d => ({ ...d, [c.id]: true }));
+    SOUNDS.click(soundStyle);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center gap-3">
+      <ProgressBadge color="indigo">📺 Watch {target} shows! {doneCount}/{target}</ProgressBadge>
+      <div className="bg-gray-800 p-3 rounded-3xl border-8 border-gray-700 shadow-2xl">
+        <div className={`bg-gradient-to-br ${ch.bg} w-64 h-40 rounded-xl flex items-center justify-center text-9xl animate-pulse`}>
+          {ch.emoji}
+        </div>
+        <div className="text-center text-white font-black mt-1">{ch.label}</div>
+      </div>
+      <BarbieSVG b={b} size={120} />
+      <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-md w-full">
+        <div className="grid grid-cols-3 gap-2">
+          {channels.map(c => (
+            <OptionTile key={c.id} onClick={() => pick(c)} emoji={c.emoji} label={c.label} used={done[c.id]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Play — pick a toy
+function PlayGame({ b, onWin, soundStyle }) {
+  const toys = [
+    { id:'teddy',   emoji:'🧸', label:'Teddy',   float:'💕' },
+    { id:'ball',    emoji:'⚽', label:'Ball',    float:'⚡' },
+    { id:'balloon', emoji:'🎈', label:'Balloon', float:'✨' },
+    { id:'doll',    emoji:'🪆', label:'Doll',    float:'💖' },
+    { id:'kite',    emoji:'🪁', label:'Kite',    float:'🌬️' },
+    { id:'yoyo',    emoji:'🪀', label:'Yo-Yo',   float:'⭐' },
+    { id:'blocks',  emoji:'🧱', label:'Blocks',  float:'✨' },
+    { id:'puzzle',  emoji:'🧩', label:'Puzzle',  float:'⭐' },
+  ];
+  return <PickNGame b={b} options={toys} target={5} color="purple" label="🎈 Play!"
+    onWin={onWin} soundStyle={soundStyle}
+    feedback={(o) => `${o.emoji} ${o.label}!`} />;
+}
+
+// Sleep — pick pajamas, blanket, lullaby
+function SleepGame({ b, onWin, soundStyle }) {
+  const pjs = [
+    { id:'pink',   emoji:'🌸', label:'Pink' },
+    { id:'star',   emoji:'⭐', label:'Star' },
+    { id:'unicorn',emoji:'🦄', label:'Unicorn' },
+    { id:'moon',   emoji:'🌙', label:'Moon' },
+  ];
+  const blankets = [
+    { id:'soft',   emoji:'☁️', label:'Cloud' },
+    { id:'warm',   emoji:'🔥', label:'Warm' },
+    { id:'fluffy', emoji:'🐑', label:'Fluffy' },
+    { id:'silk',   emoji:'✨', label:'Silky' },
+  ];
+  const lullabies = [
+    { id:'twinkle', emoji:'🌟', label:'Twinkle', sound:'twinkle' },
+    { id:'lullaby', emoji:'🌙', label:'Lullaby', sound:'lullaby' },
+    { id:'humm',    emoji:'🎵', label:'Hum',     sound:'lullaby' },
+    { id:'sheep',   emoji:'🐑', label:'Sheep',   sound:'marylamb' },
+  ];
+  const [pj, setPj] = useState(null);
+  const [blanket, setBlanket] = useState(null);
+  const [lullaby, setLullaby] = useState(null);
+  useEffect(() => { if (pj && blanket && lullaby) { SOUNDS[lullaby.sound](soundStyle); setTimeout(onWin, 2500); } }, [pj, blanket, lullaby]);
+
+  return (
+    <div className="relative w-full min-h-[480px] flex flex-col items-center bg-gradient-to-b from-indigo-900 via-purple-900 to-blue-950 rounded-3xl overflow-hidden p-4 gap-2">
+      <ProgressBadge color="indigo">🌙 Get her cozy!</ProgressBadge>
+      <div className="text-7xl">🌙</div>
+      <div className="relative">
+        <BarbieSVG b={b} size={130} anim={pj && blanket && lullaby ? '' : 'animate-bounce'} />
+        {pj && <div className="absolute -top-2 -right-2 text-3xl">{pj.emoji}</div>}
+        {blanket && <div className="absolute -bottom-2 -left-2 text-3xl">{blanket.emoji}</div>}
+        {lullaby && <div className="absolute top-2 -left-8 text-3xl animate-pulse">{lullaby.emoji}</div>}
+      </div>
+      <div className="bg-white/95 rounded-2xl p-2 max-w-md w-full">
+        <div className="text-xs font-black text-indigo-700 text-center mb-1">PJs:</div>
+        <div className="grid grid-cols-4 gap-1 mb-2">
+          {pjs.map(p => (
+            <button key={p.id} onClick={() => { setPj(p); SOUNDS.click(soundStyle); }}
+              className={`bg-white rounded-lg p-1 shadow border-2 ${pj?.id === p.id ? 'border-indigo-500' : 'border-indigo-200'} active:scale-95`}>
+              <div className="text-2xl">{p.emoji}</div>
+            </button>
+          ))}
+        </div>
+        <div className="text-xs font-black text-indigo-700 text-center mb-1">Blanket:</div>
+        <div className="grid grid-cols-4 gap-1 mb-2">
+          {blankets.map(p => (
+            <button key={p.id} onClick={() => { setBlanket(p); SOUNDS.click(soundStyle); }}
+              className={`bg-white rounded-lg p-1 shadow border-2 ${blanket?.id === p.id ? 'border-indigo-500' : 'border-indigo-200'} active:scale-95`}>
+              <div className="text-2xl">{p.emoji}</div>
+            </button>
+          ))}
+        </div>
+        <div className="text-xs font-black text-indigo-700 text-center mb-1">Lullaby:</div>
+        <div className="grid grid-cols-4 gap-1">
+          {lullabies.map(p => (
+            <button key={p.id} onClick={() => { setLullaby(p); SOUNDS[p.sound](soundStyle); }}
+              className={`bg-white rounded-lg p-1 shadow border-2 ${lullaby?.id === p.id ? 'border-indigo-500' : 'border-indigo-200'} active:scale-95`}>
+              <div className="text-2xl">{p.emoji}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============= ACTIVITY ROUTER =============
+function ActivityScene({ b, activity, onDone, soundStyle, stars }) {
+  const [showWin, setShowWin] = useState(false);
+  const handleWin = () => { setShowWin(true); SOUNDS.win(soundStyle); };
+  let game;
+  switch (activity.game) {
+    case 'wake':       game = <WakeGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'breakfast':  game = <BreakfastGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'bath':       game = <BathGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'salon':      game = <SalonGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'doctor':     game = <DoctorGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'treasure':   game = <TreasureGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'birthday':   game = <BirthdayGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'dance':      game = <DanceGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'sing':       game = <SingGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'ballet':     game = <BalletGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'gym':        game = <GymGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'butterfly':  game = <ButterflyGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'freeze':     game = <FreezeGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'tea':        game = <TeaGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'story':      game = <StoryGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'tv':         game = <TVGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'play':       game = <PlayGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    case 'sleep':      game = <SleepGame b={b} onWin={handleWin} soundStyle={soundStyle} />; break;
+    default:           game = <PickNGame b={b} options={[]} onWin={handleWin} soundStyle={soundStyle} label="Tap!" />;
+  }
+  return (
+    <div className="relative w-full min-h-screen bg-gradient-to-b from-pink-200 via-rose-200 to-fuchsia-200 overflow-hidden flex flex-col">
+      <FloatyBg items={['✨','💖',activity.emoji]} count={10} />
+      <HeaderBar onBack={onDone} title={`${activity.emoji} ${activity.name}`} stars={stars} />
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start p-2">{game}</div>
+      {showWin && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={onDone}>
+          <Confetti />
+          <div className="bg-gradient-to-br from-yellow-200 to-amber-300 rounded-3xl p-8 border-8 border-white shadow-2xl text-center max-w-sm" style={{ animation: 'popIn 0.5s ease-out' }}>
+            <div className="text-8xl mb-3 animate-bounce">⭐</div>
+            <div className="font-black text-3xl text-amber-700 mb-2">You did it!</div>
+            <div className="text-amber-700 font-bold mb-4">Great job, Reya! 💖</div>
+            <ChunkyButton onClick={onDone}>Yay! ✨</ChunkyButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============= SOUND PICKER MODAL =============
+function SoundPicker({ current, onChange, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={onClose}>
+      <div className="bg-white rounded-3xl p-5 border-8 border-pink-300 shadow-2xl max-w-sm w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} style={{ animation: 'popIn 0.3s ease-out' }}>
+        <h3 className="font-black text-2xl text-pink-600 text-center mb-3">🎵 Sound Style</h3>
+        <div className="text-center text-xs text-pink-500 mb-3">Tap to hear a preview</div>
+        <div className="flex flex-col gap-2">
+          {Object.entries(SOUND_STYLES).map(([key, cfg]) => (
+            <button key={key} onClick={() => {
+              onChange(key);
+              if (key !== 'off') SOUNDS.twinkle(key);
+            }}
+              className={`flex items-center justify-between p-3 rounded-2xl border-4 transition-all active:scale-95 ${
+                current === key ? 'bg-pink-100 border-pink-400 shadow-lg' : 'bg-white border-gray-200'
+              }`}>
+              <span className="font-black text-base text-pink-600">{cfg.label}</span>
+              {current === key && <span className="text-2xl">✓</span>}
+            </button>
+          ))}
+        </div>
+        <button onClick={onClose} className="w-full mt-4 bg-pink-400 text-white font-black text-xl py-3 rounded-2xl shadow-lg active:scale-95">
+          Done! 💖
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============= SCREENS =============
+function HomeScreen({ onStart, stars, soundStyle, setSoundStyle }) {
+  const [showPicker, setShowPicker] = useState(false);
+  return (
+    <div className="relative w-full min-h-screen bg-gradient-to-b from-pink-200 via-fuchsia-200 to-purple-300 overflow-hidden flex flex-col items-center justify-center p-6">
+      <FloatyBg items={['✨','💖','⭐','🌸','🦋','💕']} count={20} />
+      <div className="absolute top-4 right-4 z-10 flex gap-3 items-center">
+        <div className="bg-white/80 backdrop-blur rounded-full px-4 py-2 flex items-center gap-1.5 shadow-lg border-2 border-yellow-300">
+          <Star className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+          <span className="font-black text-yellow-600">{stars}</span>
+        </div>
+        <button onClick={() => setShowPicker(true)} className="bg-white/80 backdrop-blur rounded-full px-3 py-2 shadow-lg border-2 border-pink-300 text-xl">
+          {SOUND_STYLES[soundStyle].icon}
+        </button>
+      </div>
+      <div className="relative z-10 text-center">
+        <div className="inline-block bg-white rounded-3xl px-3 py-1 mb-3 shadow-lg border-4 border-pink-300 -rotate-3">
+          <span className="text-pink-500 font-black text-sm tracking-widest">~ FOR REYA ~</span>
+        </div>
+        <h1 className="font-black text-pink-500 leading-none mb-2" style={{
+          fontSize: 'clamp(3rem, 12vw, 6rem)',
+          textShadow: '4px 4px 0 #fff, 8px 8px 0 rgba(236,72,153,0.3)',
+        }}>Barbie</h1>
+        <h1 className="font-black text-purple-500 leading-none mb-6 -mt-2" style={{
+          fontSize: 'clamp(3rem, 12vw, 6rem)',
+          textShadow: '4px 4px 0 #fff, 8px 8px 0 rgba(168,85,247,0.3)',
+        }}>World 💖</h1>
+        <div className="flex justify-center items-end gap-1 mb-8 flex-wrap max-w-md mx-auto">
+          {BARBIES.slice(0, 8).map((b, i) => (
+            <div key={b.id} style={{ animation: `pop 2s ease-in-out ${i * 0.15}s infinite`, transform: `rotate(${(i % 2 ? 1 : -1) * 5}deg)` }}>
+              <BarbieSVG b={b} size={56} />
+            </div>
+          ))}
+        </div>
+        <ChunkyButton onClick={onStart} className="!text-3xl !px-12 !py-5">✨ Let's Play! ✨</ChunkyButton>
+      </div>
+      {showPicker && <SoundPicker current={soundStyle} onChange={setSoundStyle} onClose={() => setShowPicker(false)} />}
+    </div>
+  );
+}
+
+function BarbieGrid({ onPick, onBack, stars }) {
+  return (
+    <div className="relative w-full min-h-screen bg-gradient-to-b from-rose-100 via-pink-100 to-fuchsia-200 p-3 pb-10">
+      <FloatyBg items={['💖','✨','🌸']} count={10} />
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={onBack} className="bg-white rounded-2xl p-3 shadow-md border-2 border-pink-300">
+            <ArrowLeft className="w-6 h-6 text-pink-500" />
+          </button>
+          <h2 className="font-black text-2xl text-pink-600" style={{ textShadow: '2px 2px 0 #fff' }}>Pick a Barbie!</h2>
+          <div className="bg-white rounded-2xl px-3 py-2 shadow-md border-2 border-yellow-300 flex items-center gap-1">
+            <Star className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+            <span className="font-black text-yellow-600">{stars}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
+          {BARBIES.map((b, i) => (
+            <button key={b.id} onClick={() => onPick(b)}
+              className="bg-white rounded-3xl p-3 shadow-lg border-4 border-white active:scale-95 transition-all flex flex-col items-center gap-1"
+              style={{ transform: `rotate(${(i % 2 ? 1 : -1) * 1.5}deg)`, minHeight: '180px' }}>
+              <BarbieSVG b={b} size={110} />
+              <div className="text-center">
+                <div className="font-black text-pink-600 text-base leading-tight">{b.name}</div>
+                <div className="text-xs text-purple-500 font-bold leading-tight">{b.trait}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityGrid({ b, onPick, onBack, stars }) {
+  return (
+    <div className={`relative w-full min-h-screen bg-gradient-to-b ${b.bg} p-3 pb-10`}>
+      <FloatyBg items={['✨','💖']} count={10} />
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={onBack} className="bg-white rounded-2xl p-3 shadow-md border-2 border-white">
+            <ArrowLeft className="w-6 h-6 text-pink-500" />
+          </button>
+          <div className="bg-white rounded-2xl px-3 py-2 shadow-md border-2 border-yellow-300 flex items-center gap-1">
+            <Star className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+            <span className="font-black text-yellow-600">{stars}</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-center mb-3">
+          <BarbieSVG b={b} size={140} anim="animate-bounce" />
+          <div className="bg-white rounded-2xl px-5 py-2 mt-2 shadow-lg border-4 border-white">
+            <div className="font-black text-2xl text-pink-600">{b.name}</div>
+            <div className="text-sm text-purple-500 font-bold text-center">{b.trait}</div>
+          </div>
+        </div>
+        <div className="bg-white/70 backdrop-blur rounded-3xl p-3 max-w-3xl mx-auto">
+          <div className="text-center font-black text-pink-600 mb-2 text-lg">What should we do? 💕</div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {ACTIVITIES.map((a, i) => (
+              <button key={a.id} onClick={() => onPick(a)}
+                className="bg-white rounded-2xl p-2 shadow-md border-2 border-pink-200 active:scale-95 transition-all flex flex-col items-center"
+                style={{ transform: `rotate(${(i % 2 ? 1 : -1) * 0.8}deg)`, minHeight: '90px' }}>
+                <div className="text-4xl mb-0.5">{a.emoji}</div>
+                <div className="text-xs font-black text-pink-600 leading-tight">{a.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============= MAIN APP =============
+function App() {
+  const [screen, setScreen] = useState('home');
+  const [barbie, setBarbie] = useState(null);
+  const [activity, setActivity] = useState(null);
+  const [stars, setStars] = useState(0);
+  const [soundStyle, setSoundStyle] = useState(DEFAULT_STYLE);
+
+  useEffect(() => {
+    // Load Fredoka font
+    const fontId = 'fredoka-font';
+    if (!document.getElementById(fontId)) {
+      const link = document.createElement('link');
+      link.id = fontId; link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap';
+      document.head.appendChild(link);
+    }
+
+    // iPad-friendly viewport meta tag — disable pinch-zoom, handle notch
+    const viewportId = 'ipad-viewport';
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      document.head.appendChild(viewport);
+    }
+    viewport.setAttribute('content',
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+
+    // PWA-style "Add to Home Screen" support for iPad
+    const addMeta = (name, content) => {
+      if (document.querySelector(`meta[name="${name}"]`)) return;
+      const m = document.createElement('meta');
+      m.name = name; m.content = content;
+      document.head.appendChild(m);
+    };
+    addMeta('apple-mobile-web-app-capable', 'yes');
+    addMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+    addMeta('apple-mobile-web-app-title', 'Barbie World');
+
+    // Initialize audio on first tap (iOS Safari requires user gesture)
+    const unlockAudio = () => {
+      try { getCtx(); } catch (e) {}
+      document.removeEventListener('touchend', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
+    document.addEventListener('touchend', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
+    // Prevent accidental pinch-zoom & double-tap-zoom on iPad
+    const preventGesture = (e) => e.preventDefault();
+    document.addEventListener('gesturestart', preventGesture);
+    document.addEventListener('gesturechange', preventGesture);
+    document.addEventListener('gestureend', preventGesture);
+    return () => {
+      document.removeEventListener('gesturestart', preventGesture);
+      document.removeEventListener('gesturechange', preventGesture);
+      document.removeEventListener('gestureend', preventGesture);
+    };
+  }, []);
+
+  const handleActivityDone = () => {
+    setStars(s => s + 1);
+    setActivity(null);
+    setScreen('activities');
+  };
+
+  return (
+    <div
+      className="bg-pink-100 overflow-y-auto"
+      style={{
+        fontFamily: 'Fredoka, "Comic Sans MS", system-ui',
+        // Lock to viewport - top, left, right, bottom = 0
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        // dvh for newer iPads handling Safari URL bar
+        minHeight: '100dvh',
+        margin: 0,
+        padding: 0,
+        // iPad touch behavior tweaks
+        WebkitTapHighlightColor: 'transparent',
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        overscrollBehavior: 'none',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'manipulation',
+        // Force its own stacking context (escapes parent transforms/filters)
+        transform: 'translateZ(0)',
+        zIndex: 9999,
+      }}
+    >
+      <style>{`
+        /* AGGRESSIVE fullscreen reset */
+        html, body, #root, #__next, [data-reactroot] {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          min-height: 100vh !important;
+          min-height: 100dvh !important;
+          overflow: hidden !important;
+          position: relative !important;
+        }
+        body { background: #fce7f3 !important; }
+        /* Kill Safari's address bar reservation */
+        @supports (height: 100dvh) {
+          html, body { height: 100dvh !important; }
+        }
+        /* Touch tweaks */
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        button, a { touch-action: manipulation; }
+        button:focus { outline: none; }
+        input, select, textarea { font-size: 16px; }
+
+        @keyframes floaty { 0%,100% { transform: translateY(0) rotate(0); opacity: 0.5; } 50% { transform: translateY(-30px) rotate(15deg); opacity: 0.9; } }
+        @keyframes pop { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.1) rotate(5deg); } }
+        @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes wiggle { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+        @keyframes butterfly { 0%,100% { transform: translateY(0) rotate(-10deg); } 50% { transform: translateY(-15px) rotate(10deg); } }
+        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+        @keyframes sparkleOut { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes sway { 0%,100% { transform: translateX(-8px) rotate(-3deg); } 50% { transform: translateX(8px) rotate(3deg); } }
+        @keyframes jump { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
+        @keyframes bend { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.85); } }
+        @keyframes bubbleUp { 0% { opacity: 1; } 100% { opacity: 0; transform: translateY(-15px); } }
+      `}</style>
+      {screen === 'home' && <HomeScreen onStart={() => setScreen('barbies')} stars={stars} soundStyle={soundStyle} setSoundStyle={setSoundStyle} />}
+      {screen === 'barbies' && <BarbieGrid onPick={(b) => { setBarbie(b); setScreen('activities'); }} onBack={() => setScreen('home')} stars={stars} />}
+      {screen === 'activities' && barbie && <ActivityGrid b={barbie} onPick={(a) => { setActivity(a); setScreen('playing'); }} onBack={() => { setBarbie(null); setScreen('barbies'); }} stars={stars} />}
+      {screen === 'playing' && barbie && activity && <ActivityScene b={barbie} activity={activity} onDone={handleActivityDone} soundStyle={soundStyle} stars={stars} />}
+    </div>
+  );
+}
+
+/* ====== END APP CODE ====== */
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
